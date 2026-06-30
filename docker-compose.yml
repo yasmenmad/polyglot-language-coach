@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: hanyustar_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-hanyustarsupersecretkey987654321}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./hanyustar.db}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-mock_key}
+    volumes:
+      # Persists the SQLite database across container restarts
+      - ./backend/hanyustar.db:/app/hanyustar.db
+    restart: unless-stopped
+
+  # ── Optional: swap SQLite for PostgreSQL ────────────────────────────────────
+  # Uncomment this service and update DATABASE_URL above if you want Postgres.
+  #
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: hanyustar_db
+  #   environment:
+  #     POSTGRES_USER: hanyustar
+  #     POSTGRES_PASSWORD: hanyustar_pass
+  #     POSTGRES_DB: hanyustar
+  #   volumes:
+  #     - pg_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   pg_data:

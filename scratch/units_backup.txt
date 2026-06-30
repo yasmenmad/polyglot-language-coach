@@ -1,0 +1,23 @@
+Created At: 2026-06-14T13:09:19Z
+Completed At: 2026-06-14T13:09:19Z
+File Path: `file:///C:/Users/User/Desktop/LANG/hanyustar_fixed/frontend/src/data/units.ts`
+Total Lines: 49
+Total Bytes: 3471
+Showing lines 35 to 49
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+35:     { id: 6, title: 'Shopping & Fashion', emoji: '🛍️', lessons: [
+36:       { id: 601, title: 'Clothing', words: ['衣服', '鞋子', '裤子', '裙子', '红色'] },
+37:       { id: 602, title: 'Bargaining & Buying', words: ['买', '卖', '太贵了', '便宜', '试一下'] },
+38:       { id: 609, title: 'Unit Test', words: ['Review', 'Quiz', 'Practice', 'Mastery'] },
+39:     ]},
+40:     { id: 7, title: 'Hobbies & Leisure', emoji: '⚽', lessons: [
+41:       { id: 701, title: 'Sports', words: ['踢足球', '游泳', '跑步', '篮球', '运动'] },
+42:       { id: 702, title: 'Entertainment', words: ['看电影', '听音乐', '看书', '游戏', '唱歌'] },
+43:       { id: 709, title: 'Unit Test', words: ['Review', 'Quiz', 'Practice', 'Mastery'] },
+44:     ]},
+45:     { id: 8, title: 'Health & Weather', emoji: '🌦️', lessons: [
+46:       { id: 801, title: 'Weather', words: ['下雨', '下雪', '晴天', '冷', '热', '刮风'] },
+47:       { id: 802, title: 'Health', words: ['不舒服', '生病', '医生', '疼', '药', '感冒'] },
+48:       { id: 809, title: 'Unit Test', words: ['Review', 'Quiz', 'Practice', 'Mastery'] },
+49:     ]},
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

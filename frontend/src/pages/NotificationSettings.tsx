@@ -1,0 +1,416 @@
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { api } from '../services/api';
+import { Bell, Clock, Sliders, Check, AlertCircle, ChevronLeft, Play, Sparkles, RefreshCw } from 'lucide-react';
+import { SUPPORTED_LANGUAGES } from '../data/courses';
+
+interface NotificationSettingsProps {
+  onBack: () => void;
+  user: any;
+  onUpdateUser: (updated: any) => void;
+}
+
+export default function NotificationSettings({ onBack, user, onUpdateUser }: NotificationSettingsProps) {
+  const { t } = useTranslation();
+  // Profile details states
+  const [editUsername, setEditUsername] = useState(user?.username || '');
+  const [editEmail, setEditEmail] = useState(user?.email || '');
+  const [editNativeLang, setEditNativeLang] = useState(user?.native_lang || 'en');
+  const [editLearningGoal, setEditLearningGoal] = useState(user?.learning_goal || 'general');
+  const [editEnergyMood, setEditEnergyMood] = useState(user?.energy_mood || 'focused');
+  const [editRole, setEditRole] = useState(user?.role || 'student');
+  const [updatingDetails, setUpdatingDetails] = useState(false);
+  const [detailsStatus, setDetailsStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setEditUsername(user.username || '');
+      setEditEmail(user.email || '');
+      setEditNativeLang(user.native_lang || 'en');
+      setEditLearningGoal(user.learning_goal || 'general');
+      setEditEnergyMood(user.energy_mood || 'focused');
+      setEditRole(user.role || 'student');
+    }
+  }, [user]);
+
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingDetails(true);
+    setDetailsStatus(null);
+    try {
+      const res = await api.updateProfile({
+        username: editUsername,
+        email: editEmail || undefined,
+        native_lang: editNativeLang,
+        learning_goal: editLearningGoal,
+        energy_mood: editEnergyMood,
+        role: editRole,
+      });
+      onUpdateUser(res);
+      setDetailsStatus({ type: 'success', message: t('profile_updated') });
+    } catch (err: any) {
+      setDetailsStatus({ type: 'error', message: err.message || t('profile_update_failed') });
+    } finally {
+      setUpdatingDetails(false);
+    }
+  };
+  const [enabled, setEnabled] = useState<boolean>(user?.notifications_enabled ?? true);
+  const [prefTime, setPrefTime] = useState<string>(user?.preferred_notification_time ?? '19:00');
+  const [peakHour, setPeakHour] = useState<string>('19:00');
+  const [logsAnalyzed, setLogsAnalyzed] = useState<number>(0);
+  const [loadingPeak, setLoadingPeak] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [simulating, setSimulating] = useState<boolean>(false);
+  
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  
+  // Custom toast push simulation
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPeakHours();
+  }, []);
+
+  const fetchPeakHours = async () => {
+    setLoadingPeak(true);
+    try {
+      const res = await api.getPeakHours();
+      setPeakHour((res as any).peak_hour || '19:00');
+      setLogsAnalyzed((res as any).logs_analyzed || 0);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingPeak(false);
+    }
+  };
+
+  const handleSaveSettings = async (timeVal: string, enabledVal: boolean) => {
+    setError('');
+    setSuccess('');
+    setSaving(true);
+    try {
+      const updated = await api.updateNotificationSettings(timeVal, enabledVal);
+      onUpdateUser(updated);
+      setSuccess(t('notification_saved'));
+    } catch (e) {
+      console.error(e);
+      setError(t('notification_save_failed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggle = (val: boolean) => {
+    setEnabled(val);
+    handleSaveSettings(prefTime, val);
+  };
+
+  const handleTimeChange = (time: string) => {
+    setPrefTime(time);
+    handleSaveSettings(time, enabled);
+  };
+
+  const handleApplyAIPeak = () => {
+    setPrefTime(peakHour);
+    handleSaveSettings(peakHour, enabled);
+  };
+
+  const handleSimulateNotification = async () => {
+    setError('');
+    setSimulating(true);
+    try {
+      const res = await api.triggerPushNotification();
+      const msg = (res as any).message || 'Time to practice your lessons today!';
+      
+      // Trigger HTML5 toast notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Polyglot AI Reminder', { body: msg });
+      } else if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification('Polyglot AI Reminder', { body: msg });
+          }
+        });
+      }
+
+      // Show on-screen toast too
+      setToastMessage(msg);
+      setTimeout(() => setToastMessage(null), 5000);
+    } catch (e) {
+      console.error(e);
+      setError(t('notification_trigger_failed'));
+    } finally {
+      setSimulating(false);
+    }
+  };
+
+  const hoursArray = Array.from({ length: 24 }, (_, i) => {
+    const hour = i.toString().padStart(2, '0');
+    return `${hour}:00`;
+  });
+
+  return (
+    <div className="min-h-screen pb-12 px-4 md:px-8 max-w-4xl mx-auto relative text-left">
+      {/* On-screen Toast Notification simulation */}
+      {toastMessage && (
+        <div className="fixed bottom-8 right-8 z-50 bg-slate-900 dark:bg-slate-800 text-white p-4 rounded-2xl shadow-2xl border border-slate-700/80 max-w-xs animate-slide-in flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-brand-blue/20 text-brand-blue flex-shrink-0">
+            <Bell size={18} />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-100">{t('polyglot_ai_coach', 'Polyglot AI Coach')}</div>
+            <p className="text-[11px] text-slate-300 mt-1 leading-snug font-semibold">{toastMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="flex items-center justify-between py-6 border-b border-slate-100 dark:border-slate-800 mb-8">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+          >
+            <ChevronLeft size={20} className="text-slate-600 dark:text-slate-300" />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
+              <Bell className="text-brand-blue" size={22} />
+              {t('smart_reminders')}
+            </h1>
+            <p className="text-xs text-slate-500">
+              {t('smart_reminders_desc')}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      {/* Alerts */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center gap-2 text-xs font-semibold">
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center gap-2 text-xs font-semibold">
+          <Check size={16} />
+          {success}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        {/* Settings Console */}
+        <div className="md:col-span-7 space-y-6">
+          {/* Profile details settings card */}
+          <div className="p-6 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl space-y-5">
+            <h3 className="text-sm font-black text-slate-855 dark:text-slate-100 flex items-center gap-1.5 border-b border-slate-50 dark:border-slate-855 pb-2">
+              <Sliders size={16} className="text-brand-blue" />
+              {t('edit_profile')}
+            </h3>
+
+            <form onSubmit={handleDetailsSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('username')}</label>
+                  <input
+                    type="text"
+                    required
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-bold focus:outline-none focus:border-brand-blue focus:bg-white dark:focus:bg-slate-900 transition-all text-sm"
+                    placeholder={t('username')}
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('email_address')}</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-bold focus:outline-none focus:border-brand-blue focus:bg-white dark:focus:bg-slate-900 transition-all text-sm"
+                    placeholder={t('no_email_set')}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('native_language')}</label>
+                  <select
+                    value={editNativeLang}
+                    onChange={(e) => setEditNativeLang(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-855 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-blue transition-all text-sm"
+                  >
+                    {SUPPORTED_LANGUAGES.map(l => (
+                      <option key={l.code} value={l.code}>{t(l.label.toLowerCase(), l.label)}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('learning_goal')}</label>
+                  <select
+                    value={editLearningGoal}
+                    onChange={(e) => setEditLearningGoal(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-855 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-blue transition-all text-sm"
+                  >
+                    <option value="general">{t('general_learning')}</option>
+                    <option value="travel">{t('travel_culture')}</option>
+                    <option value="business">{t('business_career')}</option>
+                    <option value="exams">{t('academic_exams')}</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('energy_mood')}</label>
+                  <select
+                    value={editEnergyMood}
+                    onChange={(e) => setEditEnergyMood(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-855 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-blue transition-all text-sm"
+                  >
+                    <option value="focused">{t('focused_intense')}</option>
+                    <option value="casual">{t('casual_relaxed')}</option>
+                    <option value="tired">{t('light_review')}</option>
+                  </select>
+                </div>
+              </div>
+
+              {detailsStatus && (
+                <div className={`p-3 rounded-xl text-xs font-bold text-center border-2 ${
+                  detailsStatus.type === 'success' 
+                    ? 'bg-emerald-50 dark:bg-emerald-955/20 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-red-50 dark:bg-red-955/20 border-red-200 dark:border-red-800 text-red-500'
+                }`}>
+                  {detailsStatus.message}
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={updatingDetails}
+                  className="bg-brand-blue hover:bg-blue-600 text-white font-black text-xs py-3 px-6 rounded-xl shadow-[0_4px_0_rgb(37,99,235)] hover:translate-y-[2px] transition-all active:translate-y-[4px] uppercase tracking-wider disabled:opacity-50"
+                >
+                  {updatingDetails ? t('saving') : t('save_profile_details')}
+                </button>
+              </div>
+            </form>
+          </div>
+          <div className="p-6 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl space-y-5">
+            {/* Toggle switch */}
+            <div className="flex justify-between items-center pb-4 border-b border-slate-50 dark:border-slate-855">
+              <div>
+                <h3 className="text-sm font-black text-slate-850 dark:text-slate-100">
+                  {t('enable_reminders')}
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  {t('allow_push')}
+                </p>
+              </div>
+              <button
+                onClick={() => handleToggle(!enabled)}
+                className={`w-12 h-6 rounded-full p-1 transition-all ${
+                  enabled ? 'bg-brand-blue' : 'bg-slate-200 dark:bg-slate-800'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                    enabled ? 'translate-x-6' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Time select */}
+            {enabled && (
+              <div className="space-y-4 pt-2">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                    {t('scheduled_time')}
+                  </label>
+                  <select
+                    value={prefTime}
+                    onChange={(e) => handleTimeChange(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-855 font-bold text-slate-850 dark:text-slate-200"
+                  >
+                    {hoursArray.map((hour) => (
+                      <option key={hour} value={hour}>
+                        {hour}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Push simulation card */}
+          <div className="p-6 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl space-y-4">
+            <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+              {t('simulation_sandbox')}
+            </h3>
+            <p className="text-xs text-slate-550 dark:text-slate-400">
+              {t('simulation_sandbox_desc')}
+            </p>
+            <button
+              onClick={handleSimulateNotification}
+              disabled={simulating}
+              className="w-full py-2.5 bg-slate-850 hover:bg-slate-750 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+            >
+              {simulating ? (
+                <>
+                  <RefreshCw className="animate-spin" size={14} /> {t('generating_reminder')}
+                </>
+              ) : (
+                <>
+                  <Play size={12} /> {t('trigger_test_notification')}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* AI Analytics sidebar */}
+        <div className="md:col-span-5 space-y-6">
+          <div className="p-6 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl space-y-5">
+            <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+              <Sparkles size={14} className="text-brand-blue" />
+              {t('ai_activity_analysis')}
+            </h3>
+
+            {loadingPeak ? (
+              <div className="text-center py-6 text-slate-400 text-xs">
+                {t('scanning_activity')}
+              </div>
+            ) : (
+              <div className="space-y-4 text-xs">
+                <div className="bg-slate-50 dark:bg-slate-850/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">
+                    {t('recommended_time')}
+                  </div>
+                  <div className="text-lg font-black text-brand-blue">
+                    {peakHour}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2">
+                    {t('determined_by_activity', { count: logsAnalyzed })}
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleApplyAIPeak}
+                  disabled={prefTime === peakHour}
+                  className="w-full py-2 bg-brand-blue/10 hover:bg-brand-blue/20 text-brand-blue rounded-xl text-xs font-bold disabled:opacity-40 disabled:hover:bg-brand-blue/10"
+                >
+                  {t('apply_recommended')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

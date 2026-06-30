@@ -1,0 +1,54 @@
+Created At: 2026-06-14T13:06:42Z
+Completed At: 2026-06-14T13:06:43Z
+File Path: `file:///C:/Users/User/Desktop/LANG/hanyustar_fixed/frontend/src/data/lessonSentences.ts`
+Total Lines: 582
+Total Bytes: 37080
+Showing lines 35 to 80
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+35:       { target: '这是我爸爸', rom: 'zhè shì wǒ bàba', en: 'this is my father' },
+36:       { target: '我爱我妈妈', rom: 'wǒ ài wǒ māma', en: 'I love my mother' },
+37:     ],
+38:     302: [
+39:       { target: '她很漂亮', rom: 'tā hěn piàoliang', en: 'she is very beautiful' },
+40:       { target: '我们很高兴', rom: 'wǒmen hěn gāoxìng', en: 'we are very happy' },
+41:     ],
+42:     401: [
+43:       { target: '我喝水', rom: 'wǒ hē shuǐ', en: 'I drink water' },
+44:       { target: '他吃面条', rom: 'tā chī miàntiáo', en: 'he eats noodles' },
+45:     ],
+46:     402: [
+47:       { target: '我要饭', rom: 'wǒ yào fàn', en: 'I want rice' },
+48:       { target: '这个多少钱', rom: 'zhè ge duōshao qián', en: 'how much is this' },
+49:     ]
+50:     901: [
+51:       { target: '我们明天需要谈判合同合作项目', rom: 'wǒmen míngtiān xūyào tánpàn hétong hézuò xiàngmù', en: 'We need to negotiate the contract for the partnership project tomorrow' },
+52:       { target: '这是这次商务会议的主要议程', rom: 'zhè shì zhè cì shāngwù huìyì de zhǔyào yìchéng', en: 'This is the main agenda for this business meeting' }
+53:     ],
+54:     902: [
+55:       { target: '分析市场收入和客户活动非常重要', rom: 'fēnxī shìchǎng shōurù hé kèhù huódòng fēicháng zhòngyào', en: 'Analyzing market revenue and customer campaigns is very important' }
+56:     ],
+57:     1001: [
+58:       { target: '公民通过投票参与民主选举', rom: 'gōngmín tōngguò tóupiào cānyù mínzhǔ xuǎnjǔ', en: 'Citizens participate in democratic elections by voting' }
+59:     ],
+60:     1002: [
+61:       { target: '消除贫困是实现平等和正义的关键政策', rom: 'xiāochú pínkùn shì shíxiàn píngděng hé zhèngyì de guānjiàn zhèngcè', en: 'Eradicating poverty is a crucial policy for achieving equality and justice' }
+62:     ],
+63:     1101: [
+64:       { target: '人工智能算法实现了生产自动化', rom: 'réngōng zhìnéng suànfǎ shíxiàn le shēngchǎn zìdònghuà', en: 'Artificial intelligence algorithms have enabled production automation' }
+65:     ],
+66:     1102: [
+67:       { target: '火箭将进入星系轨道探索新的行星', rom: 'huǒjiàn jiāng jìnrù xīngxì guǐdào tànsuò xīn de xíngxīng', en: 'The rocket will enter a galaxy orbit to explore new planets' }
+68:     ],
+69:     1201: [
+70:       { target: '画廊里展示了许多古代的绘画和雕塑杰作', rom: 'huàláng lǐ zhǎnshì le xǔduō gǔdài de huìhuà hé diāosù jiézuò', en: 'The gallery displays many classical painting and sculpture masterpieces' }
+71:     ],
+72:     1202: [
+73:       { target: '作者在这本小说中使用了生动的诗歌隐喻', rom: 'zuòzhě zài zhè běn xiǎoshuō zhōng shǐyòng le shēngdòng de shīgē yǐnyù', en: 'The author used vivid poetic metaphors in this novel' }
+74:     ]
+75:   },
+76:   es: {
+77:     101: [
+78:       { target: 'hola', rom: 'OH-lah', en: 'hello' },
+79:       { target: 'buenos días amigo', rom: 'BWEH-nos DEE-as ah-MEE-goh', en: 'good morning friend' },
+80:       { target: 'buenas noches', rom: 'BWEH-nas NOH-ches', en: 'good night' },
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

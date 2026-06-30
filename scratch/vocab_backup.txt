@@ -1,0 +1,44 @@
+Created At: 2026-06-14T13:07:34Z
+Completed At: 2026-06-14T13:07:34Z
+File Path: `file:///C:/Users/User/Desktop/LANG/hanyustar_fixed/frontend/src/data/vocab.ts`
+Total Lines: 588
+Total Bytes: 33456
+Showing lines 550 to 585
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+550:     { h: 'جدول أعمال', p: 'jadwal a‘mal', m: 'agenda', t: 2 },
+551:     { h: 'سوق', p: 'suq', m: 'market', t: 1 },
+552:     { h: 'عميل', p: '‘amil', m: 'client / customer', t: 1 },
+553:     { h: 'حملة', p: 'hamlah', m: 'campaign', t: 1 },
+554:     { h: 'إيرادات', p: 'iradāt', m: 'revenue / income', t: 2 },
+555:     // C1 Politics
+556:     { h: 'يصوت', p: 'yusawwit', m: 'to vote', t: 1 },
+557:     { h: 'ديمقراطية', p: 'dimuqratiyyah', m: 'democracy', t: 2 },
+558:     { h: 'انتخابات', p: 'intikhabāt', m: 'election', t: 2 },
+559:     { h: 'سياسة', p: 'siyasah', m: 'politics / policy', t: 1 },
+560:     { h: 'فقر', p: 'faqr', m: 'poverty', t: 1 },
+561:     { h: 'مساواة', p: 'musawah', m: 'equality', t: 2 },
+562:     { h: 'عدالة', p: '‘adalah', m: 'justice', t: 2 },
+563:     { h: 'مواطنة', p: 'muwatanah', m: 'citizenship', t: 2 },
+564:     // C1 Tech
+565:     { h: 'خوارزمية', p: 'khawarizmiyyah', m: 'algorithm', t: 3 },
+566:     { h: 'روبوت', p: 'rubut', m: 'robot', t: 1 },
+567:     { h: 'أتمتة', p: 'atmatah', m: 'automation', t: 2 },
+568:     { h: 'ذكاء', p: 'dhaka'', m: 'intelligence', t: 1 },
+569:     { h: 'مجرة', p: 'majarrah', m: 'galaxy', t: 2 },
+570:     { h: 'مدار', p: 'madar', m: 'orbit', t: 2 },
+571:     { h: 'كوكب', p: 'kawkab', m: 'planet', t: 1 },
+572:     { h: 'صاروخ', p: 'sarukh', m: 'rocket', t: 1 },
+573:     // C1 Art
+574:     { h: 'لوحة', p: 'lawhah', m: 'painting / board', t: 1 },
+575:     { h: 'تحفة فنية', p: 'tuhfah fanniyyah', m: 'masterpiece', t: 2 },
+576:     { h: 'معرض', p: 'ma‘rid', m: 'gallery', t: 1 },
+577:     { h: 'نحت', p: 'naht', m: 'sculpture', t: 1 },
+578:     { h: 'رواية', p: 'riwayah', m: 'novel', t: 1 },
+579:     { h: 'شعر', p: 'shi‘r', m: 'poetry', t: 1 },
+580:     { h: 'مؤلف', p: 'mu'allif', m: 'author', t: 1 },
+581:     { h: 'استعارة', p: 'isti‘arah', m: 'metaphor', t: 2 }
+582:   ],
+583: };
+584: 
+585: export function getVocab(lang: LanguageCode = 'zh'): VocabWord[] {
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

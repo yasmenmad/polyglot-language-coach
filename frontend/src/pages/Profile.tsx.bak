@@ -1,0 +1,479 @@
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Settings, Shield, Award, Calendar, ChevronRight, Activity, Globe, Download, Zap, BookOpen } from 'lucide-react';
+import { api } from '../services/api';
+
+interface ProfileProps {
+  user: any;
+  onBack: () => void;
+  onUpdateUser: (user: any) => void;
+  onNavigate?: (page: string) => void;
+}
+
+// Simple Activity Heatmap Component
+const ActivityHeatmap = () => {
+  // Generate mock data for the heatmap (last 14 weeks)
+  const weeks = 14;
+  const days = 7;
+  const data = Array.from({ length: weeks * days }, () => Math.floor(Math.random() * 4));
+
+  return (
+    <div className="flex gap-1 overflow-x-auto pb-2">
+      {Array.from({ length: weeks }).map((_, w) => (
+        <div key={w} className="flex flex-col gap-1">
+          {Array.from({ length: days }).map((_, d) => {
+            const val = data[w * days + d];
+            const colors = ['bg-slate-100 dark:bg-slate-800', 'bg-sky-200 dark:bg-sky-900', 'bg-sky-400 dark:bg-sky-700', 'bg-sky-500'];
+            return (
+              <div key={d} className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm ${colors[val]} transition-colors hover:ring-2 ring-slate-400`} />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default function Profile({ user, onBack, onUpdateUser, onNavigate }: ProfileProps) {
+  const { t } = useTranslation();
+  const [avatarStyle, setAvatarStyle] = useState({ skinTone: 'light', outfit: 'default' });
+
+  // Outfits that unlock at different levels
+  const unlockedOutfits = ['default'];
+  if (user?.level >= 5) unlockedOutfits.push('kimono');
+  if (user?.level >= 10) unlockedOutfits.push('hanfu');
+  if (user?.level >= 15) unlockedOutfits.push('djellaba');
+
+  // Edit details form states
+  const [editUsername, setEditUsername] = useState(user?.username || '');
+  const [editEmail, setEditEmail] = useState(user?.email || '');
+  const [editNativeLang, setEditNativeLang] = useState(user?.native_lang || 'en');
+  const [editLearningGoal, setEditLearningGoal] = useState(user?.learning_goal || 'general');
+  const [editEnergyMood, setEditEnergyMood] = useState(user?.energy_mood || 'focused');
+  const [editRole, setEditRole] = useState(user?.role || 'student');
+  const [updating, setUpdating] = useState(false);
+  const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Teacher specific local settings
+  const [teacherBio, setTeacherBio] = useState(localStorage.getItem('teacher_bio') || '');
+  const [classroomCode, setClassroomCode] = useState(localStorage.getItem('classroom_code') || 'HANYU-2026');
+
+  // Sync user details to local state when user prop changes
+  useEffect(() => {
+    if (user) {
+      setEditUsername(user.username || '');
+      setEditEmail(user.email || '');
+      setEditNativeLang(user.native_lang || 'en');
+      setEditLearningGoal(user.learning_goal || 'general');
+      setEditEnergyMood(user.energy_mood || 'focused');
+      setEditRole(user.role || 'student');
+      if (user.avatar) {
+        setAvatarStyle(prev => ({ ...prev, outfit: user.avatar }));
+      }
+    }
+  }, [user]);
+
+  // Outfit change triggers automatic update in database
+  const handleOutfitChange = async (outfit: string) => {
+    setAvatarStyle(prev => ({ ...prev, outfit }));
+    try {
+      const res = await api.updateProfile({ avatar: outfit });
+      onUpdateUser(res);
+    } catch (err: any) {
+      alert("Failed to save avatar choice: " + err.message);
+    }
+  };
+
+  const handleRoleChange = async (role: string) => {
+    setEditRole(role);
+    try {
+      const res = await api.updateProfile({ role });
+      onUpdateUser(res);
+    } catch (err: any) {
+      alert("Failed to update role: " + err.message);
+    }
+  };
+
+  const saveTeacherDetails = () => {
+    localStorage.setItem('teacher_bio', teacherBio);
+    localStorage.setItem('classroom_code', classroomCode);
+    alert('Teacher credentials successfully saved!');
+  };
+
+  // Submit profile details modifications to backend
+  const handleDetailsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdating(true);
+    setFormStatus(null);
+    try {
+      const res = await api.updateProfile({
+        username: editUsername,
+        email: editEmail || undefined,
+        native_lang: editNativeLang,
+        learning_goal: editLearningGoal,
+        energy_mood: editEnergyMood,
+        role: editRole,
+      });
+      onUpdateUser(res);
+      setFormStatus({ type: 'success', message: t('profile_updated') });
+    } catch (err: any) {
+      setFormStatus({ type: 'error', message: err.message || t('profile_update_failed') });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-955 font-sans selection:bg-sky-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <ChevronRight className="w-6 h-6 rotate-180 text-slate-600 dark:text-slate-300" />
+          </button>
+          <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{t('profile_avatar')}</h1>
+        </div>
+        <button 
+          onClick={() => onNavigate && onNavigate('settings')}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <Settings className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+        </button>
+      </header>
+
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          
+          {/* Avatar & Basic Stats Section */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-8 items-center md:items-start relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-sky-400/10 to-transparent blur-[80px] rounded-full pointer-events-none" />
+            
+            {/* SVG Avatar Container */}
+            <div className="relative">
+              <div className="w-40 h-40 rounded-[2.5rem] bg-gradient-to-br from-sky-100 to-blue-50 dark:from-sky-900/50 dark:to-slate-800 flex items-center justify-center shadow-inner border-4 border-white dark:border-slate-800 relative z-10 overflow-hidden">
+                <div className="text-6xl animate-bounce" style={{ animationDuration: '3s' }}>
+                  {avatarStyle.outfit === 'kimono' ? '👘' : avatarStyle.outfit === 'hanfu' ? '🎎' : avatarStyle.outfit === 'djellaba' ? '👳' : '🧑'}
+                </div>
+              </div>
+              <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center text-white font-black text-xl shadow-[0_4px_0_rgb(2,132,199)] border-4 border-white dark:border-slate-900 z-20">
+                {user?.level || 1}
+              </div>
+            </div>
+
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-2">{user?.username}</h2>
+              <p className="text-slate-500 font-medium mb-4 uppercase tracking-wider text-xxs font-black flex items-center justify-center md:justify-start gap-1">
+                <span className={`px-2.5 py-1 rounded-lg ${user?.role === 'teacher' ? 'bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400' : 'bg-sky-100 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400'}`}>
+                  {user?.role === 'teacher' ? t('teacher').toUpperCase() : t('student').toUpperCase()}
+                </span>
+                <span className="text-slate-400">· {t('joined', { date: new Date(user?.joined_at || Date.now()).toLocaleDateString() })}</span>
+              </p>
+              
+              <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                <div className="bg-slate-50 dark:bg-slate-955 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500">
+                    <Zap size={20} strokeWidth={3} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('streak_label')}</div>
+                    <div className="text-lg font-black text-slate-800 dark:text-white">{t('streak_count', { count: user?.streak || 0 })}</div>
+                  </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-955 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-500">
+                    <Award size={20} strokeWidth={3} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('total_xp')}</div>
+                    <div className="text-lg font-black text-slate-800 dark:text-white">{user?.xp || 0} XP</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Avatar Customizer */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight mb-6 flex items-center gap-2">
+                <Globe className="w-5 h-5 text-sky-500" /> {t('customize_avatar')}
+              </h3>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{t('cultural_outfits')}</label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {['default', 'kimono', 'hanfu', 'djellaba'].map((outfit) => {
+                      const isUnlocked = unlockedOutfits.includes(outfit);
+                      return (
+                        <button 
+                          key={outfit}
+                          disabled={!isUnlocked}
+                          onClick={() => handleOutfitChange(outfit)}
+                          className={`aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 border-2 transition-all relative ${
+                            avatarStyle.outfit === outfit 
+                              ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' 
+                              : isUnlocked 
+                                ? 'border-slate-200 dark:border-slate-700 hover:border-sky-300 bg-slate-55 dark:bg-slate-950' 
+                                : 'border-slate-100 dark:border-slate-800 bg-slate-55 opacity-50 grayscale cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="text-2xl">{outfit === 'kimono' ? '👘' : outfit === 'hanfu' ? '🎎' : outfit === 'djellaba' ? '👳' : '👕'}</div>
+                          {!isUnlocked && <Shield className="w-3 h-3 text-slate-400 absolute top-2 right-2" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-3 font-medium">{t('unlock_attire_hint')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity Heatmap */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight mb-6 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-sky-500" /> {t('learning_activity')}
+              </h3>
+              
+              <div className="bg-slate-50 dark:bg-slate-955 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <ActivityHeatmap />
+                <div className="flex justify-between items-center mt-4 text-xs font-bold text-slate-400">
+                  <span>{t('less')}</span>
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 rounded-sm bg-slate-100 dark:bg-slate-800" />
+                    <div className="w-3 h-3 rounded-sm bg-sky-200 dark:bg-sky-900" />
+                    <div className="w-3 h-3 rounded-sm bg-sky-400 dark:bg-sky-700" />
+                    <div className="w-3 h-3 rounded-sm bg-sky-500" />
+                  </div>
+                  <span>{t('more')}</span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('longest_streak')}</div>
+                  <div className="text-xl font-black text-slate-800 dark:text-white">{t('streak_count', { count: Math.max(user?.streak || 0, 14) })}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('words_mastered')}</div>
+                  <div className="text-xl font-black text-slate-800 dark:text-white">{Math.floor((user?.xp || 0) / 15)}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Profile Details Edit Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+            <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight mb-6 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-sky-500" /> Edit Profile Details
+            </h3>
+            
+            <form onSubmit={handleDetailsSubmit} className="space-y-6">
+              
+              {/* Account Role Selector */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-450 uppercase tracking-widest">Account Role</label>
+                <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl gap-1 border border-slate-200 dark:border-slate-800 max-w-xs">
+                  <button
+                    type="button"
+                    onClick={() => handleRoleChange('student')}
+                    className={`flex-1 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                      editRole === 'student'
+                        ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleChange('teacher')}
+                    className={`flex-1 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
+                      editRole === 'teacher'
+                        ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    Teacher
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Username</label>
+                  <input
+                    type="text"
+                    required
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-bold focus:outline-none focus:border-sky-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm"
+                    placeholder="Username"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Email Address</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-bold focus:outline-none focus:border-sky-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-sm"
+                    placeholder="No email set"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Native Language</label>
+                  <select
+                    value={editNativeLang}
+                    onChange={(e) => setEditNativeLang(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-sky-500 transition-all text-sm"
+                  >
+                    <option value="en">English</option>
+                    <option value="zh">Chinese</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="it">Italian</option>
+                    <option value="ar">Arabic</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Learning Goal</label>
+                  <select
+                    value={editLearningGoal}
+                    onChange={(e) => setEditLearningGoal(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-sky-500 transition-all text-sm"
+                  >
+                    <option value="general">General Learning</option>
+                    <option value="travel">Travel & Culture</option>
+                    <option value="business">Business & Career</option>
+                    <option value="exams">Academic / Exams</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Energy/Mood</label>
+                  <select
+                    value={editEnergyMood}
+                    onChange={(e) => setEditEnergyMood(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-sky-500 transition-all text-sm"
+                  >
+                    <option value="focused">Focused & Intense</option>
+                    <option value="casual">Casual & Relaxed</option>
+                    <option value="tired">Light Review (Tired)</option>
+                  </select>
+                </div>
+              </div>
+
+              {formStatus && (
+                <div className={`p-3 rounded-xl text-xs font-bold text-center border-2 ${
+                  formStatus.type === 'success' 
+                    ? 'bg-emerald-50 dark:bg-emerald-955/20 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-red-50 dark:bg-red-955/20 border-red-200 dark:border-red-800 text-red-500'
+                }`}>
+                  {formStatus.message}
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="bg-sky-500 hover:bg-sky-450 text-white font-black text-xs py-3 px-6 rounded-xl shadow-[0_4px_0_rgb(2,132,199)] hover:translate-y-[2px] transition-all active:translate-y-[4px] uppercase tracking-wider disabled:opacity-50 flex items-center gap-2"
+                >
+                  {updating ? t('saving') : t('save_profile_details')}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Teacher Settings Card */}
+          {editRole === 'teacher' && (
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6 animate-in slide-in-from-bottom-2 duration-300 text-left">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 dark:border-slate-855 pb-4">
+                <div>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-brand-purple" /> {t('educator_bio_classroom')}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5 font-medium">{t('educator_desc')}</p>
+                </div>
+                {onNavigate && (
+                  <button
+                    onClick={() => onNavigate('classroom')}
+                    className="px-4 py-2.5 bg-brand-purple hover:bg-purple-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md active:scale-95 transition-all flex items-center gap-1.5"
+                  >
+                    <BookOpen size={14} />
+                    {t('launch_gradebook')}
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('classroom_code')}</label>
+                    <input
+                      type="text"
+                      value={classroomCode}
+                      onChange={(e) => setClassroomCode(e.target.value)}
+                      placeholder="e.g. CLASS-101"
+                      className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-purple transition-all text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('educator_bio')}</label>
+                    <textarea
+                      rows={1}
+                      value={teacherBio}
+                      onChange={(e) => setTeacherBio(e.target.value)}
+                      placeholder={t('educator_bio_placeholder')}
+                      className="w-full bg-slate-50 dark:bg-slate-955 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-brand-purple transition-all text-sm resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={saveTeacherDetails}
+                    className="bg-brand-purple hover:bg-purple-600 text-white font-black text-xs py-3 px-6 rounded-xl shadow-[0_4px_0_rgb(107,33,168)] hover:translate-y-[2px] transition-all active:translate-y-[4px] uppercase tracking-wider"
+                  >
+                    {t('save_teacher_details')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Offline Mode Manager (Preview) */}
+          <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-700 text-white relative overflow-hidden">
+            <div className="absolute top-[-50%] right-[-10%] w-[60%] h-[200%] bg-sky-500/20 blur-[100px] pointer-events-none rounded-full" />
+            <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black tracking-tight mb-2 flex items-center gap-2">
+                  <Download className="w-6 h-6 text-sky-400" /> {t('offline_full_mode')}
+                </h3>
+                <p className="text-slate-400 font-medium max-w-md text-left">
+                  {t('offline_desc')}
+                </p>
+              </div>
+              <button className="w-full md:w-auto bg-sky-500 hover:bg-sky-455 text-white font-black text-sm py-4 px-8 rounded-2xl shadow-[0_6px_0_rgb(2,132,199)] hover:shadow-[0_2px_0_rgb(2,132,199)] hover:translate-y-[4px] transition-all active:shadow-none active:translate-y-[6px] uppercase tracking-wider flex items-center justify-center gap-2 flex-shrink-0">
+                <Download size={18} strokeWidth={3} /> {t('download_hsk1')}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}

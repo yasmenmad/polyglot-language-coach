@@ -1,0 +1,297 @@
+import { useState } from 'react';
+import { STORIES_BY_LANG } from '../data/kids_stories';
+import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, CheckCircle, Volume2, Award, Clock } from 'lucide-react';
+import { LanguageCode, LANG_LOCALE, getLanguageInfo } from '../data/courses';
+
+interface StoriesProps {
+  onBack: () => void;
+  onAwardXP: (xp: number) => void;
+  lang?: string;
+}
+
+export default function Stories({ onBack, onAwardXP, lang }: StoriesProps) {
+  const activeLang = (lang || 'zh') as LanguageCode;
+  const langInfo = getLanguageInfo(activeLang);
+  const langLocale = LANG_LOCALE[activeLang] || 'zh-CN';
+
+  const stories = STORIES_BY_LANG[activeLang] || STORIES_BY_LANG.zh;
+
+  const [selectedStory, setSelectedStory] = useState<any | null>(null);
+  const [slideIdx, setSlideIdx] = useState(0);
+  const [quizAnswered, setQuizAnswered] = useState(false);
+  const [selectedOpt, setSelectedOpt] = useState<string | null>(null);
+  const [quizChecked, setQuizChecked] = useState(false);
+
+  const startStory = (story: any) => {
+    setSelectedStory(story);
+    setSlideIdx(0);
+    setQuizAnswered(false);
+    setSelectedOpt(null);
+    setQuizChecked(false);
+  };
+
+  const playTTS = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = langLocale;
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleNext = () => {
+    if (slideIdx < selectedStory.slides.length - 1) {
+      setSlideIdx(s => s + 1);
+    } else {
+      setQuizAnswered(true);
+    }
+  };
+
+  const handleQuizCheck = () => {
+    setQuizChecked(true);
+    if (selectedOpt === selectedStory.quiz.a) {
+      onAwardXP(15);
+    }
+  };
+
+  const finishStory = () => {
+    setSelectedStory(null);
+  };
+
+  return (
+    <div className="w-full max-w-[1000px] px-6 py-8 space-y-6 text-left ml-0">
+      
+      {/* Top Navigation */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <button
+          onClick={selectedStory ? finishStory : onBack}
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 font-semibold text-sm transition-all"
+        >
+          <ArrowLeft className="w-4.5 h-4.5" />
+          {selectedStory ? 'Quit Reader' : 'Dashboard'}
+        </button>
+        
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-brand-yellow" />
+          <h2 className="text-base font-black font-cn">
+            {selectedStory ? selectedStory.title : `Interactive ${langInfo.label} Stories`}
+          </h2>
+        </div>
+      </div>
+
+      {!selectedStory ? (
+        /* Stories Grid Selection */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {stories.map(story => (
+            <div
+              key={story.id}
+              onClick={() => startStory(story)}
+              className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-5 hover:-translate-y-1 hover:border-brand-blue hover:shadow-xl cursor-pointer transition-all duration-300 flex flex-col items-stretch space-y-4 shadow-sm relative overflow-hidden group"
+            >
+              {/* Card Header Illustration / Cover */}
+              <div className="h-40 bg-slate-50 dark:bg-slate-950 flex items-center justify-center rounded-2xl overflow-hidden relative border border-slate-100 dark:border-slate-850">
+                <div className="w-28 h-28 flex items-center justify-center rounded-2xl overflow-hidden transform group-hover:scale-105 transition-all duration-300">
+                  {story.ill.startsWith('<svg') ? (
+                    <div dangerouslySetInnerHTML={{ __html: story.ill }} className="w-full h-full" />
+                  ) : (
+                    <img src={story.ill} alt={story.title} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="absolute top-3 left-3 bg-brand-blue-bg/85 dark:bg-brand-blue/20 backdrop-blur-md text-brand-blue px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  Beginner
+                </div>
+                <div className="absolute top-3 right-3 bg-slate-200/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-650 dark:text-slate-400 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                  <Clock className="w-2.5 h-2.5" /> 2m read
+                </div>
+              </div>
+
+              {/* Title & Description */}
+              <div className="space-y-1.5 flex-1 flex flex-col justify-between">
+                <div>
+                  <span className="text-[9px] font-black text-brand-yellow uppercase tracking-widest block mb-0.5">
+                    Interactive Reader · Story {story.id}
+                  </span>
+                  <h3 className="text-base font-black text-slate-800 dark:text-white leading-snug group-hover:text-brand-blue transition-colors">
+                    {story.title}
+                  </h3>
+                </div>
+                <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-50 dark:border-slate-800">
+                  {story.targetTitle} {story.romTitle ? `(${story.romTitle})` : ''}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Active Story Reader view */
+        <div className="max-w-2xl mx-auto space-y-6">
+          
+          {/* Progress bar */}
+          <div className="w-full bg-slate-100 dark:bg-slate-850 h-3 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-brand-yellow rounded-full transition-all duration-300"
+              style={{
+                width: `${
+                  quizAnswered
+                    ? 100
+                    : ((slideIdx + 1) / selectedStory.slides.length) * 100
+                }%`
+              }}
+            />
+          </div>
+
+          {!quizAnswered ? (
+            /* Story Slide Panel */
+            <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-8 md:p-12 shadow-xl text-center space-y-8 relative overflow-hidden">
+              <div className="absolute inset-0 bg-radial-gradient from-transparent to-slate-50/10 pointer-events-none opacity-30" />
+              
+              <div className="space-y-6 relative">
+                <span className="text-[10px] font-black text-brand-blue uppercase tracking-widest block bg-brand-blue-bg/40 dark:bg-brand-blue/10 px-3 py-1 rounded-full w-max mx-auto">
+                  Slide {slideIdx + 1} of {selectedStory.slides.length}
+                </span>
+                
+                {/* Large Text Container */}
+                <div className="min-h-[160px] flex flex-col justify-center items-center py-4">
+                  <h3 className="text-3xl md:text-4xl font-black text-slate-850 dark:text-white leading-relaxed font-cn select-all">
+                    {selectedStory.slides[slideIdx].target}
+                  </h3>
+                  
+                  {selectedStory.slides[slideIdx].rom && (
+                    <p className="text-base md:text-lg font-bold text-brand-blue mt-3 select-all">
+                      {selectedStory.slides[slideIdx].rom}
+                    </p>
+                  )}
+
+                  <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500 italic mt-4 max-w-md">
+                    "{selectedStory.slides[slideIdx].en}"
+                  </p>
+                </div>
+              </div>
+
+              {/* Speaker / Audio Action */}
+              <div className="flex justify-center pt-2 relative">
+                <button
+                  onClick={() => playTTS(selectedStory.slides[slideIdx].target)}
+                  className="flex items-center gap-2 py-3 px-8 rounded-2xl bg-brand-blue text-white hover:bg-brand-blue-dark font-black text-xs uppercase tracking-wider transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  Read Aloud
+                </button>
+              </div>
+
+              {/* Navigation controls */}
+              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-800 relative">
+                <button
+                  disabled={slideIdx === 0}
+                  onClick={() => setSlideIdx(s => s - 1)}
+                  className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-2xl disabled:opacity-30 transition-all active:scale-95 flex items-center justify-center"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={handleNext}
+                  className="py-3 px-8 bg-brand-green hover:bg-brand-green-dark text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 flex items-center gap-1.5 shadow-md"
+                >
+                  {slideIdx === selectedStory.slides.length - 1 ? 'Go to Quiz' : 'Next Slide'}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+            </div>
+          ) : (
+            /* Story Quiz Panel */
+            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-850 rounded-3xl p-8 shadow-sm space-y-6">
+              
+              <div className="text-center space-y-2">
+                <span className="text-xxs font-bold text-brand-yellow uppercase tracking-wider block">
+                  Comprehension Test
+                </span>
+                <h3 className="text-xl font-black text-slate-850 dark:text-white">
+                  {selectedStory.quiz.q}
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {selectedStory.quiz.opts.map((opt: string) => {
+                  const isSelected = selectedOpt === opt;
+                  const isCorrect = opt === selectedStory.quiz.a;
+
+                  let optStyle = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-355';
+                  if (isSelected) {
+                    if (quizChecked) {
+                      optStyle = isCorrect
+                        ? 'border-brand-green bg-brand-green-bg text-brand-green-dark'
+                        : 'border-brand-red bg-brand-red-bg text-brand-red-dark';
+                    } else {
+                      optStyle = 'border-brand-yellow bg-brand-yellow-bg text-brand-yellow-dark';
+                    }
+                  } else if (quizChecked && isCorrect) {
+                    optStyle = 'border-brand-green bg-brand-green-bg text-brand-green-dark';
+                  }
+
+                  return (
+                    <button
+                      key={opt}
+                      disabled={quizChecked}
+                      onClick={() => setSelectedOpt(opt)}
+                      className={`w-full text-left py-4 px-5 rounded-2xl border-2 text-sm font-bold transition-all ${optStyle}`}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {quizChecked && (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 flex items-center gap-2">
+                  {selectedOpt === selectedStory.quiz.a ? (
+                    <>
+                      <Award className="w-6 h-6 text-brand-yellow animate-bounce" />
+                      <span className="text-sm font-bold text-brand-yellow-dark">Fantastic! You earned +15 XP.</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-6 h-6 text-brand-green" />
+                      <span className="text-sm font-bold text-slate-600">Finished story. Keep working on reading!</span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2">
+                <button
+                  onClick={() => setQuizAnswered(false)}
+                  className="px-6 py-3.5 border-2 border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-500 rounded-2xl transition-all active-press"
+                >
+                  Review Story
+                </button>
+
+                {!quizChecked ? (
+                  <button
+                    disabled={!selectedOpt}
+                    onClick={handleQuizCheck}
+                    className="px-8 py-3.5 bg-brand-blue disabled:opacity-40 text-white text-sm font-bold rounded-2xl transition-all active-press"
+                  >
+                    Check Answer
+                  </button>
+                ) : (
+                  <button
+                    onClick={finishStory}
+                    className="px-8 py-3.5 bg-brand-green text-white text-sm font-bold rounded-2xl transition-all active-press"
+                  >
+                    Finish Story
+                  </button>
+                )}
+              </div>
+
+            </div>
+          )}
+
+        </div>
+      )}
+
+    </div>
+  );
+}
