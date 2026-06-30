@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/polyglot-language-coach/sw.js', { scope: '/polyglot-language-coach/' })})}
