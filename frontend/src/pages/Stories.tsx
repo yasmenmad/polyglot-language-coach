@@ -97,7 +97,7 @@ export default function Stories({ onBack, onAwardXP, lang }: StoriesProps) {
                   {story.ill.startsWith('<svg') ? (
                     <div dangerouslySetInnerHTML={{ __html: story.ill }} className="w-full h-full" />
                   ) : (
-                    <img src={story.ill} alt={t(story.title)} className="w-full h-full object-cover" />
+                    <img src={story.ill.startsWith('/') ? (import.meta as any).env.BASE_URL + story.ill.slice(1) : story.ill} alt={t(story.title)} className="w-full h-full object-cover" />
                   )}
                 </div>
                 <div className="absolute top-3 left-3 bg-brand-blue-bg/85 dark:bg-brand-blue/20 backdrop-blur-md text-brand-blue px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">

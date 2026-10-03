@@ -189,7 +189,7 @@ export default function Landing({ onLogin, onGetStarted, onGuestMode }: LandingP
             {/* Mascot Image */}
             <div className="animate-float relative z-10">
               <img 
-                src="/mascot.png" 
+                src={(import.meta as any).env.BASE_URL + "mascot.png"} 
                 alt={t('polyglot_mascot_owl', 'Polyglot Mascot Owl')} 
                 className="w-full h-auto object-contain drop-shadow-[0_16px_32px_rgba(88,204,2,0.15)] dark:drop-shadow-[0_16px_32px_rgba(28,176,246,0.1)]"
               />
@@ -476,7 +476,7 @@ export default function Landing({ onLogin, onGetStarted, onGuestMode }: LandingP
               <div className="relative group max-w-[420px]">
                 <div className="absolute inset-0 bg-brand-green/10 blur-2xl rounded-full group-hover:scale-105 transition-transform" />
                 <img 
-                  src="/feature_offline.png" 
+                  src={(import.meta as any).env.BASE_URL + "feature_offline.png"} 
                   alt={t('watch_and_speak_dashboard', 'Watch and Speak Dashboard')} 
                   className="rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xl relative z-10 group-hover:scale-[1.02] transition-all duration-300"
                 />
@@ -490,7 +490,7 @@ export default function Landing({ onLogin, onGetStarted, onGuestMode }: LandingP
               <div className="relative group max-w-[420px]">
                 <div className="absolute inset-0 bg-brand-blue/10 blur-2xl rounded-full group-hover:scale-105 transition-transform" />
                 <img 
-                  src="/feature_ai_chat.png" 
+                  src={(import.meta as any).env.BASE_URL + "feature_ai_chat.png"} 
                   alt={t('ai_chat_interface', 'AI Chat Interface')} 
                   className="rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xl relative z-10 group-hover:scale-[1.02] transition-all duration-300"
                 />
@@ -532,7 +532,7 @@ export default function Landing({ onLogin, onGetStarted, onGuestMode }: LandingP
               <div className="relative group max-w-[420px]">
                 <div className="absolute inset-0 bg-brand-purple/10 blur-2xl rounded-full group-hover:scale-105 transition-transform" />
                 <img 
-                  src="/feature_tournament.png" 
+                  src={(import.meta as any).env.BASE_URL + "feature_tournament.png"} 
                   alt={t('tournament_leaderboard', 'Tournament Leaderboard')} 
                   className="rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xl relative z-10 group-hover:scale-[1.02] transition-all duration-300"
                 />
@@ -655,7 +655,7 @@ export default function Landing({ onLogin, onGetStarted, onGuestMode }: LandingP
       {/* --- FINAL CTA BANNERS --- */}
       <section className="max-w-4xl mx-auto px-6 py-24 text-center space-y-8 flex flex-col items-center">
         <div className="w-24 h-24 animate-float">
-          <img src="/logo.png" alt={t('polyglot_logo', 'Polyglot Logo')} className="w-full h-full object-contain drop-shadow-lg" />
+          <img src={(import.meta as any).env.BASE_URL + "logo.png"} alt={t('polyglot_logo', 'Polyglot Logo')} className="w-full h-full object-contain drop-shadow-lg" />
         </div>
         
         <h2 className="text-4xl md:text-5xl font-black leading-tight text-slate-850 dark:text-white font-outfit">

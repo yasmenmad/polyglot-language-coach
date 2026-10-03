@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface FlagProps {
   code: string;
@@ -8,6 +8,8 @@ interface FlagProps {
 
 export default function Flag({ code, size = 16, className = "" }: FlagProps) {
   const normCode = code.toLowerCase();
+  const rawClipId = useId();
+  const clipId = `circle-clip-${normCode}-${rawClipId.replace(/:/g, '')}`;
 
   const renderSvgContent = () => {
     switch (normCode) {
@@ -157,12 +159,12 @@ export default function Flag({ code, size = 16, className = "" }: FlagProps) {
       width={size}
       height={size}
       className={`rounded-full overflow-hidden inline-block align-middle shadow-sm select-none ${className}`}
-      style={{ minWidth: size, minHeight: size }}
+      style={{ minWidth: size, minHeight: size, borderRadius: '50%' }}
     >
-      <clipPath id="circle-clip">
+      <clipPath id={clipId}>
         <circle cx="50" cy="50" r="50" />
       </clipPath>
-      <g clipPath="url(#circle-clip)">
+      <g clipPath={`url(#${clipId})`}>
         {renderSvgContent()}
       </g>
     </svg>

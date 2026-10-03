@@ -473,7 +473,7 @@ function App() {
       <aside className="sidebar">
         <div className="sb-logo" onClick={() => navigate('home')} style={{ paddingBottom: '16px', borderBottom: '1px solid rgba(226,232,240,0.5)' }}>
           <div className="sb-logo-icon" style={{ background: 'transparent', padding: 0, boxShadow: 'none' }}>
-            <img src="/logo.png" alt={t('polyglot_logo', 'Polyglot Logo')} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover' }} />
+            <img src={(import.meta as any).env.BASE_URL + "logo.png"} alt={t('polyglot_logo', 'Polyglot Logo')} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover' }} />
           </div>
           <div className="sb-logo-text" style={{ marginLeft: '12px' }}>
             <div className="sb-logo-cn" style={{ fontFamily: 'inherit', fontSize: 20, fontWeight: 900, letterSpacing: '-0.5px' }}>{t('polyglot', 'Polyglot')}</div>
@@ -733,7 +733,7 @@ function App() {
         <header className="md:hidden flex items-center justify-between px-5 py-3.5 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 sticky top-0 z-40">
           <div className="flex items-center gap-2.5 font-black text-slate-800 dark:text-slate-100 text-xl cursor-pointer tracking-tight" onClick={() => navigate('home')}>
             <div style={{ width: 36, height: 36, borderRadius: 10 }}>
-              <img src="/logo.png" alt={t('logo', 'Logo')} style={{ width: '100%', height: '100%', borderRadius: 10, objectFit: 'cover' }} />
+              <img src={(import.meta as any).env.BASE_URL + "logo.png"} alt={t('logo', 'Logo')} style={{ width: '100%', height: '100%', borderRadius: 10, objectFit: 'cover' }} />
             </div>
             {t('polyglot', 'Polyglot')}
           </div>

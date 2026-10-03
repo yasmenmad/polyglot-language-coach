@@ -66,7 +66,7 @@ export default function Auth({ onAuthSuccess, onBack, onGuestMode, initialIsLogi
       <div className="w-full max-w-md relative z-10 animate-fade-in-up mt-12">
         
         <div className="text-center mb-8">
-          <img src="/mascot.png" alt={t('polyglot_mascot', 'Polyglot Mascot')} className="w-24 h-24 mx-auto object-contain drop-shadow-md mb-6 animate-bounce" style={{ animationDuration: '3s' }} />
+          <img src={(import.meta as any).env.BASE_URL + "mascot.png"} alt={t('polyglot_mascot', 'Polyglot Mascot')} className="w-24 h-24 mx-auto object-contain drop-shadow-md mb-6 animate-bounce" style={{ animationDuration: '3s' }} />
           <h1 className="text-3xl font-black text-slate-800 tracking-tight">
             {isLogin ? 'Log in' : 'Create your profile'}
           </h1>
